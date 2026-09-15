@@ -52,21 +52,22 @@
   }
   #guideOverlay {
     position: absolute;
-    border: 3px dashed rgba(255,255,255,0.85);
-    border-radius: 6px;
     pointer-events: none;
   }
-  #guideHead {
-    position: absolute;
-    border: 2px solid rgba(255,255,255,0.7);
-    border-radius: 50%;
-    pointer-events: none;
+  #guideOverlay svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
-  #guideShoulders {
+  #guideSizeLabel {
     position: absolute;
-    left: 0; right: 0;
-    border-top: 2px dashed rgba(255,220,80,0.9);
+    font-size: 12px;
+    color: #fff;
+    background: rgba(0,0,0,0.55);
+    padding: 3px 10px;
+    border-radius: 10px;
     pointer-events: none;
+    white-space: nowrap;
   }
   .hint-top {
     position: absolute; top: 14px; left: 0; right: 0;
@@ -121,12 +122,26 @@
   <!-- Màn hình 2: camera -->
   <div class="screen" id="screen-camera">
     <video id="video" autoplay playsinline muted></video>
-    <div class="hint-top">Căn 2 vai chạm sát mép khung, đầu nằm trong vòng tròn</div>
+    <div class="hint-top">Nhìn thẳng vào máy ảnh, căn đầu và vai theo đường kẻ xanh</div>
     <div class="hint-name" id="hintName"></div>
     <div id="guideOverlay">
-      <div id="guideHead"></div>
-      <div id="guideShoulders"></div>
+      <svg viewBox="0 0 300 400" preserveAspectRatio="none">
+        <!-- Khung đỏ ngoài cùng: đúng vùng sẽ được cắt (3x4) -->
+        <rect x="2" y="2" width="296" height="396" fill="none" stroke="#ff3b30" stroke-width="4"/>
+        <!-- Đường dọc giữa -->
+        <line x1="150" y1="0" x2="150" y2="400" stroke="#2979ff" stroke-width="1.5" stroke-dasharray="5 5"/>
+        <!-- Đường ngang tầm mắt -->
+        <line x1="35" y1="150" x2="265" y2="150" stroke="#2979ff" stroke-width="1.5" stroke-dasharray="5 5"/>
+        <!-- Đường ngang vai -->
+        <line x1="0" y1="240" x2="300" y2="240" stroke="#2979ff" stroke-width="1.5" stroke-dasharray="5 5"/>
+        <!-- Viền đầu (oval) -->
+        <ellipse cx="150" cy="150" rx="66" ry="95" fill="none" stroke="#2979ff" stroke-width="2.5"/>
+        <!-- Viền vai / cổ áo, chạm 2 mép khung -->
+        <path d="M 95 220 Q 60 260 0 396" fill="none" stroke="#2979ff" stroke-width="2.5"/>
+        <path d="M 205 220 Q 240 260 300 396" fill="none" stroke="#2979ff" stroke-width="2.5"/>
+      </svg>
     </div>
+    <div id="guideSizeLabel">Khổ 3 × 4 cm</div>
     <button id="captureBtn" onclick="capturePhoto()"></button>
   </div>
 
@@ -159,7 +174,7 @@
    * Dán URL Web App (kết thúc bằng /exec) sau khi deploy Apps Script (Code.gs) vào đây.
    * Ví dụ: https://script.google.com/macros/s/AKfycb.../exec
    */
-  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlO7DOeLlirKv9S-LdrP19OI6C1UYr6SBnIKbOjrmAgFJdMYni4ylFNmUFd2OelpEJ/exec';
+  var APPS_SCRIPT_URL = 'DÁN_URL_APPS_SCRIPT_CỦA_BẠN_VÀO_ĐÂY';
 
   var videoEl, stream, fullName = '';
   var croppedBase64 = '';
@@ -197,7 +212,7 @@
     window.addEventListener('resize', positionGuide);
   }
 
-  // Vẽ khung hướng dẫn (tỉ lệ 3:4) căn giữa màn hình, với vòng đầu và vạch vai
+  // Vẽ khung hướng dẫn (tỉ lệ 3:4) căn giữa màn hình
   function positionGuide() {
     var vw = window.innerWidth, vh = window.innerHeight;
     var guideH = vh * 0.72;
@@ -215,18 +230,12 @@
     g.style.width = guideW + 'px';
     g.style.height = guideH + 'px';
 
-    var head = document.getElementById('guideHead');
-    var headW = guideW * 0.5;
-    var headH = guideH * 0.34;
-    head.style.width = headW + 'px';
-    head.style.height = headH + 'px';
-    head.style.left = ((guideW - headW) / 2) + 'px';
-    head.style.top = (guideH * 0.06) + 'px';
+    var label = document.getElementById('guideSizeLabel');
+    label.style.left = (left + guideW / 2) + 'px';
+    label.style.top = (top + guideH + 8) + 'px';
+    label.style.transform = 'translateX(-50%)';
 
-    var shoulders = document.getElementById('guideShoulders');
-    shoulders.style.top = (guideH * 0.80) + 'px';
-
-    // Lưu lại vùng khung (tính theo % để dùng khi crop)
+    // Lưu lại vùng khung (dùng khi crop)
     window._guideRect = { left: left, top: top, width: guideW, height: guideH };
   }
 
