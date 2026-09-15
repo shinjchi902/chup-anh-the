@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Chụp ảnh thẻ 3x4</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: #111; color: #fff;
+    font-family: -apple-system, Roboto, "Segoe UI", Arial, sans-serif;
+    overflow: hidden;
+  }
+  .screen {
+    position: fixed; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .screen.active { display: flex; }
+
+  /* ---- Màn hình nhập tên ---- */
+  #screen-name h1 { font-size: 20px; margin-bottom: 24px; text-align: center; }
+  #nameInput {
+    width: 100%; max-width: 360px;
+    font-size: 18px; padding: 14px 16px;
+    border-radius: 10px; border: none;
+    margin-bottom: 20px;
+    background: #fff; color: #111;
+  }
+  .btn {
+    font-size: 17px; font-weight: 600;
+    padding: 14px 28px; border-radius: 10px;
+    border: none; cursor: pointer;
+    width: 100%; max-width: 360px;
+  }
+  .btn-primary { background: #2e7d32; color: #fff; }
+  .btn-secondary { background: #444; color: #fff; margin-top: 12px; }
+  .btn-row { display: flex; gap: 12px; width: 100%; max-width: 360px; }
+  .btn-row .btn { flex: 1; margin-top: 0; }
+
+  /* ---- Màn hình camera ---- */
+  #screen-camera { padding: 0; justify-content: flex-start; }
+  #video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: #000;
+  }
+  #guideOverlay {
+    position: absolute;
+    border: 3px dashed rgba(255,255,255,0.85);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  #guideHead {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.7);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  #guideShoulders {
+    position: absolute;
+    left: 0; right: 0;
+    border-top: 2px dashed rgba(255,220,80,0.9);
+    pointer-events: none;
+  }
+  .hint-top {
+    position: absolute; top: 14px; left: 0; right: 0;
+    text-align: center; font-size: 14px;
+    color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    padding: 0 16px;
+  }
+  .hint-name {
+    position: absolute; top: 44px; left: 0; right: 0;
+    text-align: center; font-size: 13px; color: #ffd54f;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+  #captureBtn {
+    position: absolute; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #fff; border: 5px solid rgba(255,255,255,0.4);
+  }
+
+  /* ---- Màn hình preview ---- */
+  #screen-preview img, #canvasOut {
+    max-width: 80vw; max-height: 65vh;
+    border-radius: 8px;
+    border: 2px solid #333;
+    margin-bottom: 20px;
+  }
+
+  /* ---- Màn hình đang lưu / kết quả ---- */
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: #4caf50;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .msg-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-align: center; }
+  .msg-sub { font-size: 14px; color: #ccc; margin-bottom: 24px; text-align: center; }
+  .error-box { color: #ff6b6b; }
+</style>
+</head>
+<body>
+
+  <!-- Màn hình 1: nhập họ tên -->
+  <div class="screen active" id="screen-name">
+    <h1>Nhập họ tên người được chụp</h1>
+    <input id="nameInput" type="text" placeholder="VD: Nguyễn Văn A" autocomplete="off">
+    <button class="btn btn-primary" onclick="startCamera()">Tiếp tục → Mở camera</button>
+  </div>
+
+  <!-- Màn hình 2: camera -->
+  <div class="screen" id="screen-camera">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="hint-top">Căn 2 vai chạm sát mép khung, đầu nằm trong vòng tròn</div>
+    <div class="hint-name" id="hintName"></div>
+    <div id="guideOverlay">
+      <div id="guideHead"></div>
+      <div id="guideShoulders"></div>
+    </div>
+    <button id="captureBtn" onclick="capturePhoto()"></button>
+  </div>
+
+  <!-- Màn hình 3: preview -->
+  <div class="screen" id="screen-preview">
+    <canvas id="canvasOut" style="display:none;"></canvas>
+    <img id="previewImg" alt="preview">
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="retake()">Chụp lại</button>
+      <button class="btn btn-primary" onclick="saveToDrive()">Lưu ảnh</button>
+    </div>
+  </div>
+
+  <!-- Màn hình 4: đang lưu -->
+  <div class="screen" id="screen-saving">
+    <div class="spinner"></div>
+    <div class="msg-title">Đang lưu ảnh lên Google Drive...</div>
+  </div>
+
+  <!-- Màn hình 5: kết quả -->
+  <div class="screen" id="screen-result">
+    <div class="msg-title" id="resultTitle"></div>
+    <div class="msg-sub" id="resultSub"></div>
+    <button class="btn btn-primary" onclick="resetAll()">Chụp ảnh khác</button>
+  </div>
+
+<script>
+  /**
+   * ===== CẤU HÌNH =====
+   * Dán URL Web App (kết thúc bằng /exec) sau khi deploy Apps Script (Code.gs) vào đây.
+   * Ví dụ: https://script.google.com/macros/s/AKfycb.../exec
+   */
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlO7DOeLlirKv9S-LdrP19OI6C1UYr6SBnIKbOjrmAgFJdMYni4ylFNmUFd2OelpEJ/exec';
+
+  var videoEl, stream, fullName = '';
+  var croppedBase64 = '';
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startCamera() {
+    fullName = document.getElementById('nameInput').value.trim();
+    if (!fullName) {
+      alert('Vui lòng nhập họ tên trước khi chụp.');
+      return;
+    }
+    document.getElementById('hintName').textContent = 'Đang chụp cho: ' + fullName;
+    showScreen('screen-camera');
+
+    videoEl = document.getElementById('video');
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    }).then(function(s) {
+      stream = s;
+      videoEl.srcObject = s;
+      videoEl.onloadedmetadata = function() {
+        videoEl.play();
+        positionGuide();
+      };
+    }).catch(function(err) {
+      alert('Không thể mở camera: ' + err.message);
+      showScreen('screen-name');
+    });
+
+    window.addEventListener('resize', positionGuide);
+  }
+
+  // Vẽ khung hướng dẫn (tỉ lệ 3:4) căn giữa màn hình, với vòng đầu và vạch vai
+  function positionGuide() {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var guideH = vh * 0.72;
+    var guideW = guideH * 3 / 4;
+    if (guideW > vw * 0.88) {
+      guideW = vw * 0.88;
+      guideH = guideW * 4 / 3;
+    }
+    var left = (vw - guideW) / 2;
+    var top = (vh - guideH) / 2;
+
+    var g = document.getElementById('guideOverlay');
+    g.style.left = left + 'px';
+    g.style.top = top + 'px';
+    g.style.width = guideW + 'px';
+    g.style.height = guideH + 'px';
+
+    var head = document.getElementById('guideHead');
+    var headW = guideW * 0.5;
+    var headH = guideH * 0.34;
+    head.style.width = headW + 'px';
+    head.style.height = headH + 'px';
+    head.style.left = ((guideW - headW) / 2) + 'px';
+    head.style.top = (guideH * 0.06) + 'px';
+
+    var shoulders = document.getElementById('guideShoulders');
+    shoulders.style.top = (guideH * 0.80) + 'px';
+
+    // Lưu lại vùng khung (tính theo % để dùng khi crop)
+    window._guideRect = { left: left, top: top, width: guideW, height: guideH };
+  }
+
+  function capturePhoto() {
+    var vw = videoEl.clientWidth, vh = videoEl.clientHeight;
+    var nw = videoEl.videoWidth, nh = videoEl.videoHeight;
+    var scale = Math.max(vw / nw, vh / nh); // object-fit: cover
+
+    var visibleNativeW = vw / scale;
+    var visibleNativeH = vh / scale;
+    var visibleNativeX = (nw - visibleNativeW) / 2;
+    var visibleNativeY = (nh - visibleNativeH) / 2;
+
+    var rect = window._guideRect;
+    // Toạ độ khung hướng dẫn trong hệ video (video full-screen nên left/top của video = 0,0)
+    var srcX = visibleNativeX + rect.left / scale;
+    var srcY = visibleNativeY + rect.top / scale;
+    var srcW = rect.width / scale;
+    var srcH = rect.height / scale;
+
+    var outW = 900, outH = 1200; // tỉ lệ 3:4
+    var canvas = document.getElementById('canvasOut');
+    canvas.width = outW;
+    canvas.height = outH;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(videoEl, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
+
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    croppedBase64 = dataUrl.split(',')[1];
+    document.getElementById('previewImg').src = dataUrl;
+
+    stopStream();
+    showScreen('screen-preview');
+  }
+
+  function retake() {
+    showScreen('screen-camera');
+    startCameraStreamOnly();
+  }
+
+  function startCameraStreamOnly() {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    }).then(function(s) {
+      stream = s;
+      videoEl.srcObject = s;
+      videoEl.onloadedmetadata = function() {
+        videoEl.play();
+        positionGuide();
+      };
+    }).catch(function(err) {
+      alert('Không thể mở camera: ' + err.message);
+      showScreen('screen-name');
+    });
+  }
+
+  function stopStream() {
+    if (stream) {
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      stream = null;
+    }
+  }
+
+  function saveToDrive() {
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('DÁN_URL') === 0) {
+      alert('Chưa cấu hình APPS_SCRIPT_URL trong file index.html.');
+      return;
+    }
+    showScreen('screen-saving');
+
+    // Dùng Content-Type: text/plain để tránh trình duyệt gửi preflight OPTIONS
+    // (Apps Script Web App không xử lý OPTIONS), vẫn parse JSON bình thường ở doPost.
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ base64Data: croppedBase64, fullName: fullName })
+    })
+      .then(function(res) { return res.json(); })
+      .then(onSaveSuccess)
+      .catch(onSaveError);
+  }
+
+  function onSaveSuccess(res) {
+    if (res && res.success) {
+      document.getElementById('resultTitle').textContent = '✅ Đã lưu ảnh thành công';
+      document.getElementById('resultSub').innerHTML =
+        'Tên file: ' + res.fileName + '<br>Thư mục: ' + res.folderName;
+    } else {
+      document.getElementById('resultTitle').textContent = '❌ Lưu ảnh thất bại';
+      document.getElementById('resultTitle').classList.add('error-box');
+      document.getElementById('resultSub').textContent = (res && res.error) || 'Lỗi không xác định.';
+    }
+    showScreen('screen-result');
+  }
+
+  function onSaveError(err) {
+    document.getElementById('resultTitle').textContent = '❌ Lưu ảnh thất bại';
+    document.getElementById('resultTitle').classList.add('error-box');
+    document.getElementById('resultSub').textContent = err.message || String(err);
+    showScreen('screen-result');
+  }
+
+  function resetAll() {
+    document.getElementById('nameInput').value = '';
+    document.getElementById('resultTitle').classList.remove('error-box');
+    croppedBase64 = '';
+    showScreen('screen-name');
+  }
+</script>
+</body>
+</html>
