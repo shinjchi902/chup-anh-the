@@ -7,67 +7,74 @@
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin: 0; padding: 0; height: 100%; width: 100%;
-    background: #111; color: #fff;
+    margin: 0; padding: 0; min-height: 100%; width: 100%;
+    background: #f2f4f7; color: #1a1a1a;
     font-family: -apple-system, Roboto, "Segoe UI", Arial, sans-serif;
-    overflow: hidden;
-  }
-  .screen {
-    position: fixed; inset: 0;
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-  }
-  .screen.active { display: flex; }
-  .screen-title { font-size: 19px; font-weight: 600; margin: 8px 0 16px; text-align: center; }
-
-  .back-link {
-    background: none; border: none; color: #90caf9;
-    font-size: 14px; padding: 6px 0; text-align: left;
-    align-self: flex-start; cursor: pointer;
   }
 
-  .list-wrap { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
-  .list-item {
-    background: #222; border: 1px solid #333; border-radius: 12px;
-    padding: 14px 16px; text-align: left; color: #fff;
-    font-size: 16px; cursor: pointer;
+  /* ===== Trang chính (sáng màu): Bước 1 + Bước 2 ===== */
+  #page {
+    max-width: 480px; margin: 0 auto;
+    padding: 20px 16px 40px;
   }
-  .list-item:active { background: #2e2e2e; }
-  .li-name { font-weight: 600; }
-  .li-sub { font-size: 13px; color: #aaa; margin-top: 4px; }
-  .badge {
-    display: inline-block; font-size: 11px; font-weight: 600;
-    background: #4caf50; color: #fff; border-radius: 8px;
-    padding: 2px 7px; margin-left: 6px; vertical-align: middle;
+  .app-title { font-size: 20px; font-weight: 700; text-align: center; margin: 8px 0 20px; }
+  .card {
+    background: #fff; border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 18px 16px; margin-bottom: 16px;
   }
-  .empty-msg { color: #999; text-align: center; margin-top: 30px; font-size: 14px; }
-
+  .step-label {
+    font-size: 13px; font-weight: 700; color: #1565c0;
+    text-transform: uppercase; letter-spacing: 0.03em;
+    margin-bottom: 10px;
+  }
+  select {
+    width: 100%; font-size: 16px; padding: 12px 14px;
+    border-radius: 10px; border: 1px solid #d7dbe0;
+    background: #fafbfc; color: #1a1a1a;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  select:disabled { color: #999; background-color: #f0f1f3; }
+  .info-line { font-size: 13px; color: #666; margin-top: 10px; min-height: 18px; }
+  .badge-inline {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    background: #e8f5e9; color: #2e7d32; border-radius: 8px;
+    padding: 2px 8px; margin-left: 6px;
+  }
   .chk-row {
     display: flex; align-items: center; gap: 8px;
-    font-size: 14px; color: #ccc; margin-bottom: 14px;
+    font-size: 14px; color: #555; margin-top: 12px;
   }
   .chk-row input { width: 18px; height: 18px; }
 
   .btn {
-    font-size: 17px; font-weight: 600;
-    padding: 14px 28px; border-radius: 10px;
-    border: none; cursor: pointer;
-    width: 100%; max-width: 360px;
+    font-size: 17px; font-weight: 700;
+    padding: 14px 24px; border-radius: 12px;
+    border: none; cursor: pointer; width: 100%;
   }
   .btn-primary { background: #2e7d32; color: #fff; }
-  .btn-secondary { background: #444; color: #fff; margin-top: 12px; }
-  .btn-row { display: flex; gap: 12px; width: 100%; max-width: 360px; }
-  .btn-row .btn { flex: 1; margin-top: 0; }
-  .center-col { align-items: center; justify-content: center; }
+  .btn-primary:disabled { background: #b6c9b7; cursor: not-allowed; }
+  .btn-secondary { background: #eceff2; color: #333; }
+  .btn-row { display: flex; gap: 12px; }
+  .btn-row .btn { flex: 1; }
+  .empty-msg { color: #999; text-align: center; font-size: 13px; padding: 6px 0; }
+  .error-text { color: #c62828; text-align: center; font-size: 13px; padding: 6px 0; }
 
-  /* ---- Màn hình camera ---- */
-  #screen-camera { padding: 0; }
+  /* ===== Màn hình camera (nền tối, giữ nguyên vì đây là khung xem video) ===== */
+  .screen {
+    position: fixed; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: #111; color: #fff; padding: 20px; z-index: 10;
+  }
+  .screen.active { display: flex; }
+
+  #screen-camera { padding: 0; background: #000; }
   #video {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    background: #000;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #000;
   }
   #guideOverlay { position: absolute; pointer-events: none; }
   #guideOverlay svg { width: 100%; height: 100%; display: block; }
@@ -78,9 +85,8 @@
   }
   .hint-top {
     position: absolute; top: 14px; left: 0; right: 0;
-    text-align: center; font-size: 14px;
-    color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    padding: 0 16px;
+    text-align: center; font-size: 14px; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8); padding: 0 16px;
   }
   .hint-name {
     position: absolute; top: 44px; left: 0; right: 0;
@@ -89,55 +95,65 @@
   }
   .cam-back {
     position: absolute; top: 12px; left: 12px;
-    background: rgba(0,0,0,0.5); color: #fff; border: none;
-    border-radius: 8px; padding: 8px 12px; font-size: 13px;
+    background: rgba(255,255,255,0.9); color: #222; border: none;
+    border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600;
   }
   #captureBtn {
-    position: absolute; bottom: 30px; left: 50%;
-    transform: translateX(-50%);
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
     width: 72px; height: 72px; border-radius: 50%;
-    background: #fff; border: 5px solid rgba(255,255,255,0.4);
+    background: #fff; border: 5px solid rgba(255,255,255,0.5);
   }
 
-  /* ---- Màn hình preview ---- */
+  /* ===== Preview / đang lưu / kết quả (sáng màu) ===== */
+  #screen-preview, #screen-saving, #screen-result {
+    background: #f2f4f7; color: #1a1a1a;
+  }
   #screen-preview img, #canvasOut {
-    max-width: 80vw; max-height: 65vh;
-    border-radius: 8px; border: 2px solid #333; margin-bottom: 20px;
+    max-width: 80vw; max-height: 60vh;
+    border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   }
-
-  /* ---- Đang lưu / kết quả ---- */
   .spinner {
     width: 40px; height: 40px;
-    border: 4px solid rgba(255,255,255,0.2);
-    border-top-color: #4caf50; border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin-bottom: 16px;
+    border: 4px solid #e0e0e0; border-top-color: #2e7d32;
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .msg-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-align: center; }
-  .msg-sub { font-size: 14px; color: #ccc; margin-bottom: 24px; text-align: center; }
-  .error-box { color: #ff6b6b; }
+  .msg-title { font-size: 19px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+  .msg-sub { font-size: 14px; color: #555; margin-bottom: 24px; text-align: center; }
+  .error-box { color: #c62828; }
+  #screen-preview .btn-row, #screen-result .btn { max-width: 360px; }
 </style>
 </head>
 <body>
 
-  <!-- Màn hình 1: chọn ngày -->
-  <div class="screen active" id="screen-date">
-    <div class="screen-title">Chọn ngày</div>
-    <div class="list-wrap" id="dateList"></div>
+  <!-- Trang chính: Bước 1 + Bước 2 -->
+  <div id="page">
+    <div class="app-title">📷 Chụp ảnh thẻ 3×4</div>
+
+    <div class="card">
+      <div class="step-label">Bước 1 · Chọn ngày</div>
+      <select id="dateSelect">
+        <option value="">— Đang tải danh sách ngày —</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="step-label">Bước 2 · Chọn người cần chụp</div>
+      <select id="nameSelect" disabled>
+        <option value="">— Chọn ngày trước —</option>
+      </select>
+      <div class="info-line" id="nameInfo"></div>
+      <label class="chk-row">
+        <input type="checkbox" id="includeDoneChk">
+        Hiện cả người đã có ảnh
+      </label>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn" disabled onclick="startCamera()">Bắt đầu chụp ảnh</button>
   </div>
 
-  <!-- Màn hình 2: chọn người -->
-  <div class="screen" id="screen-namepick">
-    <button class="back-link" onclick="loadDates()">← Chọn ngày khác</button>
-    <div class="screen-title" id="namepickTitle">Chọn người</div>
-    <label class="chk-row">
-      <input type="checkbox" id="includeDoneChk" onchange="loadNames()">
-      Hiện cả người đã có ảnh
-    </label>
-    <div class="list-wrap" id="nameList"></div>
-  </div>
-
-  <!-- Màn hình 3: camera -->
+  <!-- Màn hình camera -->
   <div class="screen" id="screen-camera">
     <video id="video" autoplay playsinline muted></video>
     <button class="cam-back" onclick="cancelCamera()">← Quay lại</button>
@@ -158,8 +174,8 @@
     <button id="captureBtn" onclick="capturePhoto()"></button>
   </div>
 
-  <!-- Màn hình 4: preview -->
-  <div class="screen center-col" id="screen-preview">
+  <!-- Preview -->
+  <div class="screen" id="screen-preview" style="align-items:center;">
     <canvas id="canvasOut" style="display:none;"></canvas>
     <img id="previewImg" alt="preview">
     <div class="btn-row">
@@ -168,17 +184,17 @@
     </div>
   </div>
 
-  <!-- Màn hình 5: đang lưu -->
-  <div class="screen center-col" id="screen-saving">
+  <!-- Đang lưu -->
+  <div class="screen" id="screen-saving" style="align-items:center;">
     <div class="spinner"></div>
     <div class="msg-title">Đang lưu ảnh lên Google Drive...</div>
   </div>
 
-  <!-- Màn hình 6: kết quả -->
-  <div class="screen center-col" id="screen-result">
+  <!-- Kết quả -->
+  <div class="screen" id="screen-result" style="align-items:center;">
     <div class="msg-title" id="resultTitle"></div>
     <div class="msg-sub" id="resultSub"></div>
-    <button class="btn btn-primary" onclick="loadDates()">Chụp ảnh khác</button>
+    <button class="btn btn-primary" onclick="backToPage()">Chụp ảnh khác</button>
   </div>
 
 <script>
@@ -193,8 +209,14 @@
   var croppedBase64 = '';
 
   function showScreen(id) {
+    document.getElementById('page').style.display = 'none';
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-    document.getElementById(id).classList.add('active');
+    if (id) document.getElementById(id).classList.add('active');
+  }
+
+  function backToPage() {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('page').style.display = 'block';
   }
 
   function apiUrlOk() {
@@ -207,85 +229,110 @@
 
   /* ---------- Bước 1: chọn ngày ---------- */
   function loadDates() {
-    stopStream();
-    showScreen('screen-date');
-    if (!apiUrlOk()) return;
-    var container = document.getElementById('dateList');
-    container.innerHTML = '<div class="empty-msg">Đang tải...</div>';
+    var sel = document.getElementById('dateSelect');
+    if (!apiUrlOk()) { sel.innerHTML = '<option value="">Chưa cấu hình API</option>'; return; }
+    sel.innerHTML = '<option value="">— Đang tải —</option>';
     fetch(APPS_SCRIPT_URL + '?action=dates')
       .then(function(r){ return r.json(); })
-      .then(renderDates)
-      .catch(function(err){ container.innerHTML = '<div class="empty-msg">Lỗi tải danh sách ngày: ' + err.message + '</div>'; });
+      .then(function(list) {
+        if (list && list.success === false) {
+          sel.innerHTML = '<option value="">Lỗi: ' + list.error + '</option>';
+          return;
+        }
+        if (!list || !list.length) {
+          sel.innerHTML = '<option value="">Không có dữ liệu</option>';
+          return;
+        }
+        sel.innerHTML = '<option value="">— Chọn ngày —</option>';
+        list.forEach(function(d) {
+          var opt = document.createElement('option');
+          opt.value = d.value;
+          opt.textContent = d.label;
+          sel.appendChild(opt);
+        });
+      })
+      .catch(function(err) {
+        sel.innerHTML = '<option value="">Lỗi tải: ' + err.message + '</option>';
+      });
   }
 
-  function renderDates(list) {
-    var container = document.getElementById('dateList');
-    container.innerHTML = '';
-    if (!list || !list.length) {
-      container.innerHTML = '<div class="empty-msg">Không có dữ liệu.</div>';
-      return;
-    }
-    list.forEach(function(d) {
-      var btn = document.createElement('button');
-      btn.className = 'list-item';
-      btn.innerHTML = '<div class="li-name">' + d.label + '</div>';
-      btn.onclick = function() {
-        selectedDate = d.value;
-        document.getElementById('includeDoneChk').checked = false;
-        loadNames();
-      };
-      container.appendChild(btn);
-    });
+  document.getElementById('dateSelect').addEventListener('change', function() {
+    selectedDate = this.value || null;
+    resetNameStep();
+    if (selectedDate) loadNames();
+  });
+
+  document.getElementById('includeDoneChk').addEventListener('change', function() {
+    if (selectedDate) loadNames();
+  });
+
+  function resetNameStep() {
+    selectedRow = null; selectedName = null;
+    var sel = document.getElementById('nameSelect');
+    sel.disabled = true;
+    sel.innerHTML = '<option value="">— Chọn ngày trước —</option>';
+    document.getElementById('nameInfo').textContent = '';
+    document.getElementById('startBtn').disabled = true;
   }
 
   /* ---------- Bước 2: chọn người ---------- */
   function loadNames() {
-    showScreen('screen-namepick');
+    var sel = document.getElementById('nameSelect');
     var includeDone = document.getElementById('includeDoneChk').checked;
-    document.getElementById('namepickTitle').textContent = 'Chọn người — ' + formatDisplayDate(selectedDate);
-    var container = document.getElementById('nameList');
-    container.innerHTML = '<div class="empty-msg">Đang tải...</div>';
+    sel.disabled = true;
+    sel.innerHTML = '<option value="">— Đang tải —</option>';
     fetch(APPS_SCRIPT_URL + '?action=names&date=' + encodeURIComponent(selectedDate) + '&includeDone=' + includeDone)
       .then(function(r){ return r.json(); })
-      .then(renderNames)
-      .catch(function(err){ container.innerHTML = '<div class="empty-msg">Lỗi tải danh sách: ' + err.message + '</div>'; });
+      .then(function(list) {
+        if (list && list.success === false) {
+          sel.innerHTML = '<option value="">Lỗi: ' + list.error + '</option>';
+          return;
+        }
+        if (!list || !list.length) {
+          sel.innerHTML = '<option value="">Không có ai phù hợp</option>';
+          return;
+        }
+        sel.innerHTML = '<option value="">— Chọn người —</option>';
+        list.forEach(function(item) {
+          var opt = document.createElement('option');
+          opt.value = item.row;
+          opt.textContent = item.name + (item.hasPhoto ? ' (đã có ảnh)' : '');
+          opt.dataset.name = item.name;
+          opt.dataset.department = item.department || '';
+          opt.dataset.empCode = item.empCode || '';
+          opt.dataset.hasPhoto = item.hasPhoto ? '1' : '0';
+          sel.appendChild(opt);
+        });
+        sel.disabled = false;
+      })
+      .catch(function(err) {
+        sel.innerHTML = '<option value="">Lỗi tải: ' + err.message + '</option>';
+      });
   }
 
-  function formatDisplayDate(v) {
-    if (!v) return '';
-    var p = v.split('-');
-    return p[2] + '/' + p[1] + '/' + p[0];
-  }
-
-  function renderNames(list) {
-    var container = document.getElementById('nameList');
-    container.innerHTML = '';
-    if (!list || !list.length) {
-      container.innerHTML = '<div class="empty-msg">Không có ai phù hợp.</div>';
+  document.getElementById('nameSelect').addEventListener('change', function() {
+    var opt = this.options[this.selectedIndex];
+    var infoEl = document.getElementById('nameInfo');
+    var startBtn = document.getElementById('startBtn');
+    if (!this.value) {
+      selectedRow = null; selectedName = null;
+      infoEl.textContent = '';
+      startBtn.disabled = true;
       return;
     }
-    list.forEach(function(item) {
-      var btn = document.createElement('button');
-      btn.className = 'list-item';
-      var sub = [];
-      if (item.department) sub.push(item.department);
-      if (item.empCode) sub.push('Mã: ' + item.empCode);
-      btn.innerHTML =
-        '<div class="li-name">' + item.name + (item.hasPhoto ? '<span class="badge">Đã có ảnh</span>' : '') + '</div>' +
-        '<div class="li-sub">' + sub.join(' · ') + '</div>';
-      btn.onclick = function() {
-        selectedRow = item.row;
-        selectedName = item.name;
-        document.getElementById('hintName').textContent = 'Đang chụp cho: ' + selectedName;
-        startCamera();
-      };
-      container.appendChild(btn);
-    });
-  }
+    selectedRow = this.value;
+    selectedName = opt.dataset.name;
+    var sub = [];
+    if (opt.dataset.department) sub.push(opt.dataset.department);
+    if (opt.dataset.empCode) sub.push('Mã: ' + opt.dataset.empCode);
+    infoEl.innerHTML = sub.join(' · ') + (opt.dataset.hasPhoto === '1' ? '<span class="badge-inline">Đã có ảnh — sẽ ghi đè</span>' : '');
+    startBtn.disabled = false;
+  });
 
   /* ---------- Bước 3: camera ---------- */
   function startCamera() {
     showScreen('screen-camera');
+    document.getElementById('hintName').textContent = 'Đang chụp cho: ' + selectedName;
     videoEl = document.getElementById('video');
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -299,14 +346,14 @@
       };
     }).catch(function(err) {
       alert('Không thể mở camera: ' + err.message);
-      loadNames();
+      backToPage();
     });
     window.addEventListener('resize', positionGuide);
   }
 
   function cancelCamera() {
     stopStream();
-    loadNames();
+    backToPage();
   }
 
   function positionGuide() {
@@ -379,7 +426,7 @@
       };
     }).catch(function(err) {
       alert('Không thể mở camera: ' + err.message);
-      loadNames();
+      backToPage();
     });
   }
 
